@@ -28,7 +28,15 @@ namespace CoursesWebAPI.Controllers
 						Name = "Web Services",
 						TemplateID = "T-514-VEFT",
 						StartDate = new DateTime(2015, 8, 17),
-						EndDate = new DateTime(2016, 1, 1)
+						EndDate = new DateTime(2016, 1, 1),
+						Students = new List<Student>()
+						{
+							new Student () 
+							{
+								SSN = "1234567890",
+								Name = "Jón Freysteinn Jónsson"
+							}
+						}
 					},
 					new Course() 
 					{
@@ -36,7 +44,15 @@ namespace CoursesWebAPI.Controllers
 						Name = "Compilers",
 						TemplateID = "T-603-THYD",
 						StartDate = new DateTime(2015, 8, 17),
-						EndDate = new DateTime(2016, 1, 1)
+						EndDate = new DateTime(2016, 1, 1),
+						Students = new List<Student>()
+						{
+							new Student () 
+							{
+								SSN = "0987654321",
+								Name = "Sverrir Páll Sverrisson"
+							}
+						}
 					}
 				};
 			}
@@ -46,9 +62,9 @@ namespace CoursesWebAPI.Controllers
 		/// Returns all the courses contained in the _courses list.
 		/// </summary>
 		[HttpGet(Name = "GetAllCourses")]
-		public IEnumerable<Course> GetCourses()
+		public IActionResult GetCourses()
 		{
-			return _courses;
+			return new ObjectResult(_courses);
 		}
 		
 		/// <summary>
@@ -100,12 +116,12 @@ namespace CoursesWebAPI.Controllers
 			if(index < 0)
 			{
 				Context.Response.Headers["Warning"] = string.Format("No Course with id: {0}", id);
-				Context.Response.StatusCode = 400;
+				return new HttpStatusCodeResult(404);
 			}
 			
 			if(!ModelState.IsValid) {
 				Context.Response.Headers["Warning"] = "Course data not valid";
-				Context.Response.StatusCode = 400;
+				return new HttpStatusCodeResult(400);
 			}
 			
 			// Update the Course data with the new data.
@@ -119,15 +135,61 @@ namespace CoursesWebAPI.Controllers
 		
 		/// <summary>
 		/// Delete the Course with the given ID.
+		/// Returns 404 if Course not found.
 		/// </summary>
 		[HttpDelete("{id:int}")]
 		public IActionResult RemoveCourse(int id)
 		{
 			var course = _courses.FirstOrDefault(c => c.ID == id);
 			if(course == null) 
+			{
+				Context.Response.Headers["Warning"] = string.Format("No Course with id: {0}", id);
 				return HttpNotFound();
+			}
+			
 			_courses.Remove(course);
 			return new HttpStatusCodeResult(204);
+		}
+		
+		/// <summary>
+		/// Returns a list of students in the Course with the given ID.
+		/// Returns 404 if Course not found.
+		/// </summary>
+		[HttpGet("{id:int}/students", Name = "GetAllStudentsInCourseByID")]
+		public IActionResult GetStudents(int id)
+		{
+			var course = _courses.FirstOrDefault(c => c.ID == id);
+			if (course == null)
+			{
+				Context.Response.Headers["Warning"] = string.Format("No Course with id: {0}", id);
+				return HttpNotFound();
+			}
+			return new ObjectResult(course.Students);
+		}
+		
+		[HttpPost("{id:int/students}")]
+		public IActionResult AddStudentToCourse(int id, [FromBody] Student student)
+		{
+			if (!ModelState.IsValid)
+            {
+				Context.Response.Headers["Warning"] = "Student data not valid";
+				return new HttpStatusCodeResult(400);
+            }
+            else
+            {
+				int index = _courses.FindIndex(c => c.ID == id);
+				if(index < 0)
+				{
+					Context.Response.Headers["Warning"] = string.Format("No Course with id: {0}", id);
+					return new HttpStatusCodeResult(404);
+				}
+				
+                _courses[index].Students.Add(student);
+				
+                Context.Response.StatusCode = 201;
+                Context.Response.Headers["Location"] = Url.Link("GetAllStudentsInCourseByID", new {id = id});
+				return new ObjectResult(_courses[index].Students);
+			}
 		}
 	}
 }

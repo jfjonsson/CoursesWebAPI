@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
 namespace CoursesWebAPI.Models
@@ -35,5 +36,10 @@ namespace CoursesWebAPI.Models
 		/// </summary>
 		[Required]
 		public DateTime EndDate { get; set; }
+		/// <summary>
+		/// List containing all the students in the Course.
+		/// </summary>
+		[Required]
+		public List<Student> Students { get; set; }
 	}
 }
