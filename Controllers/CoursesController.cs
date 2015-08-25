@@ -167,7 +167,7 @@ namespace CoursesWebAPI.Controllers
 			return new ObjectResult(course.Students);
 		}
 		
-		[HttpPost("{id:int/students}")]
+		[HttpPost("{id:int}/students")]
 		public IActionResult AddStudentToCourse(int id, [FromBody] Student student)
 		{
 			if (!ModelState.IsValid)
