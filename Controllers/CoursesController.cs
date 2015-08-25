@@ -20,6 +20,7 @@ namespace CoursesWebAPI.Controllers
 		{
 			if(_courses == null)
 			{
+				// Simple test data.
 				_courses = new List<Course>()
 				{
 					new Course() 
@@ -92,16 +93,15 @@ namespace CoursesWebAPI.Controllers
 			if (course == null || !ModelState.IsValid)
             {
 				Context.Response.Headers["Warning"] = "Course data not valid";
-				return new HttpStatusCodeResult(412);
+				return HttpBadRequest();
             }
             else
             {
+				// Get the highest ID from the course list, is list is empty default to 0.
 				course.ID = 1 + _courses.Max(x => (int?)x.ID) ?? 0;
                 _courses.Add(course);
 				
-                Context.Response.StatusCode = 201;
-                Context.Response.Headers["Location"] = Url.Link("GetCourseByID", new {id = course.ID});
-				return new ObjectResult(course);
+				return new CreatedAtRouteResult("GetCourseByID", new {id = course.ID} ,course);
 			}
 		}
 		
@@ -116,20 +116,23 @@ namespace CoursesWebAPI.Controllers
 			if(index < 0)
 			{
 				Context.Response.Headers["Warning"] = string.Format("No Course with id: {0}", id);
-				return new HttpStatusCodeResult(404);
+				return HttpNotFound();
 			}
 			
 			if(course == null || !ModelState.IsValid) {
 				Context.Response.Headers["Warning"] = "Course data not valid";
-				return new HttpStatusCodeResult(412);
+				return HttpBadRequest();
 			}
 			
 			// Update the Course data with the new data.
 			course.ID = id;
+			if(course.Students == null)
+				course.Students = _courses[index].Students;
 			_courses[index] = course;	
 			
 			Context.Response.StatusCode = 200;
 			Context.Response.Headers["Location"] = Url.Link("GetCourseByID", new {id = course.ID});
+			
 			return new ObjectResult(course);
 		}
 		
@@ -146,7 +149,6 @@ namespace CoursesWebAPI.Controllers
 				Context.Response.Headers["Warning"] = string.Format("No Course with id: {0}", id);
 				return HttpNotFound();
 			}
-			
 			_courses.Remove(course);
 			return new HttpStatusCodeResult(204);
 		}
@@ -185,15 +187,13 @@ namespace CoursesWebAPI.Controllers
 				int index = _courses.FindIndex(c => c.ID == id);
 				if(index < 0)
 				{
-					Context.Response.Headers["Warning"] = string.Format("No Course with id: {0}", id);
-					return new HttpStatusCodeResult(404);
+					Context.Response.Headers["Warning"] = string.Format("No Course with id: {0}", id); 
+					return HttpNotFound();
 				}
 				
                 _courses[index].Students.Add(student);
 				
-                Context.Response.StatusCode = 201;
-                Context.Response.Headers["Location"] = Url.Link("GetAllStudentsInCourseByID", new {id = id});
-				return new ObjectResult(_courses[index].Students);
+				return new CreatedAtRouteResult("GetAllStudentsInCourseByID", new {id = id}, _courses[index].Students);
 			}
 		}
 	}
