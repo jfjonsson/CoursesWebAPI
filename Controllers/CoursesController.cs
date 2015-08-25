@@ -11,6 +11,9 @@ namespace CoursesWebAPI.Controllers
 	[Route("api/[controller]")]
 	public class CoursesController : Controller
     {
+		/// <summary>
+		/// List of all courses currently stored in memory.
+		/// </summary>
 		private static List<Course> _courses;
 		
 		public CoursesController()
@@ -39,16 +42,22 @@ namespace CoursesWebAPI.Controllers
 			}
 		}
 		
+		/// <summary>
+		/// Returns all the courses contained in the _courses list.
+		/// </summary>
 		[HttpGet(Name = "GetAllCourses")]
 		public IEnumerable<Course> GetCourses()
 		{
 			return _courses;
 		}
 		
+		/// <summary>
+		/// Returns a single course with given ID if the course exists.
+		/// </summary>
 		[HttpGet("{id:int}", Name = "GetCourseByID")]
 		public IActionResult GetCourse(int id)
 		{
-			var course = _courses.FirstOrDefault(c => (int?)c.ID == id);
+			var course = _courses.FirstOrDefault(c => c.ID == id);
 			if (course == null)
 			{
 				return HttpNotFound();
@@ -56,11 +65,17 @@ namespace CoursesWebAPI.Controllers
 			return new ObjectResult(course);
 		}
 		
+		/// <summary>
+		/// Create a new Course in the _course list with provided information.
+		/// Returns 400 if Course data is not valid or empty.
+		/// Dynamically constructs an ID for the new course from the _course list
+		/// </summary>
 		[HttpPost]
 		public IActionResult CreateCourse([FromBody] Course course)
 		{
 			if (!ModelState.IsValid)
             {
+				Context.Response.Headers["Warning"] = "Course not valid";
 				return new HttpStatusCodeResult(400);
             }
             else
@@ -68,15 +83,15 @@ namespace CoursesWebAPI.Controllers
 				course.ID = 1 + _courses.Max(x => (int?)x.ID) ?? 0;
                 _courses.Add(course);
 				
-				string url = Url.RouteUrl("GetCourseByID", new { id = course.ID }, 
-                    Request.Scheme, Request.Host.ToUriComponent());
-				
                 Context.Response.StatusCode = 201;
-                Context.Response.Headers["Location"] = url;
+                Context.Response.Headers["Location"] = Url.Link("GetCourseByID", new {id = course.ID});
 				return new ObjectResult(course);
 			}
 		}
 		
+		/// <summary>
+		/// 
+		/// </summary>
 		[HttpPut("{id:int}")]
 		public void UpdateCourse(int id, [FromBody] Course course)
 		{
@@ -92,11 +107,14 @@ namespace CoursesWebAPI.Controllers
 			string url = Url.RouteUrl("GetCourseByID", new { id = course.ID }, 
                     Request.Scheme, Request.Host.ToUriComponent());
 				
-                Context.Response.StatusCode = 303;
-                Context.Response.Headers["Location"] = url;
+			Context.Response.StatusCode = 303;
+			Context.Response.Headers["Location"] = url;
 			
 		}
 		
+		/// <summary>
+		/// 
+		/// </summary>
 		[HttpDelete("{id:int}")]
 		public IActionResult RemoveCourse(int id)
 		{
