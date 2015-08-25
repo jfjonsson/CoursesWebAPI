@@ -83,7 +83,7 @@ namespace CoursesWebAPI.Controllers
 		
 		/// <summary>
 		/// Create a new Course in the _course list with provided information.
-		/// Returns 400 if Course data is not valid or empty.
+		/// Returns 412 if Course data is not valid or empty.
 		/// Dynamically constructs an ID for the new course from the _course list
 		/// </summary>
 		[HttpPost]
@@ -92,7 +92,7 @@ namespace CoursesWebAPI.Controllers
 			if (course == null || !ModelState.IsValid)
             {
 				Context.Response.Headers["Warning"] = "Course data not valid";
-				return new HttpStatusCodeResult(400);
+				return new HttpStatusCodeResult(412);
             }
             else
             {
@@ -121,7 +121,7 @@ namespace CoursesWebAPI.Controllers
 			
 			if(course == null || !ModelState.IsValid) {
 				Context.Response.Headers["Warning"] = "Course data not valid";
-				return new HttpStatusCodeResult(400);
+				return new HttpStatusCodeResult(412);
 			}
 			
 			// Update the Course data with the new data.
@@ -167,13 +167,18 @@ namespace CoursesWebAPI.Controllers
 			return new ObjectResult(course.Students);
 		}
 		
+		/// <summary>
+		/// Add a student to the Course with the given ID.
+		/// Returns 404 if Course is not found.
+		/// Returns 412 if Student data is not valid or empty.
+		/// </summary>
 		[HttpPost("{id:int}/students")]
 		public IActionResult AddStudentToCourse(int id, [FromBody] Student student)
 		{
 			if (student == null || !ModelState.IsValid)
             {
 				Context.Response.Headers["Warning"] = "Student data not valid";
-				return new HttpStatusCodeResult(400);
+				return new HttpStatusCodeResult(412);
             }
             else
             {
