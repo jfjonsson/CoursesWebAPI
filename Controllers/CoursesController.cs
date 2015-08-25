@@ -89,7 +89,7 @@ namespace CoursesWebAPI.Controllers
 		[HttpPost]
 		public IActionResult CreateCourse([FromBody] Course course)
 		{
-			if (!ModelState.IsValid)
+			if (course == null || !ModelState.IsValid)
             {
 				Context.Response.Headers["Warning"] = "Course data not valid";
 				return new HttpStatusCodeResult(400);
@@ -119,7 +119,7 @@ namespace CoursesWebAPI.Controllers
 				return new HttpStatusCodeResult(404);
 			}
 			
-			if(!ModelState.IsValid) {
+			if(course == null || !ModelState.IsValid) {
 				Context.Response.Headers["Warning"] = "Course data not valid";
 				return new HttpStatusCodeResult(400);
 			}
@@ -170,7 +170,7 @@ namespace CoursesWebAPI.Controllers
 		[HttpPost("{id:int}/students")]
 		public IActionResult AddStudentToCourse(int id, [FromBody] Student student)
 		{
-			if (!ModelState.IsValid)
+			if (student == null || !ModelState.IsValid)
             {
 				Context.Response.Headers["Warning"] = "Student data not valid";
 				return new HttpStatusCodeResult(400);

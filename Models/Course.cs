@@ -39,7 +39,6 @@ namespace CoursesWebAPI.Models
 		/// <summary>
 		/// List containing all the students in the Course.
 		/// </summary>
-		[Required]
 		public List<Student> Students { get; set; }
 	}
 }
