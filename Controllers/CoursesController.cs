@@ -75,7 +75,7 @@ namespace CoursesWebAPI.Controllers
 		{
 			if (!ModelState.IsValid)
             {
-				Context.Response.Headers["Warning"] = "Course not valid";
+				Context.Response.Headers["Warning"] = "Course data not valid";
 				return new HttpStatusCodeResult(400);
             }
             else
@@ -90,30 +90,35 @@ namespace CoursesWebAPI.Controllers
 		}
 		
 		/// <summary>
-		/// 
+		/// Updates the data in the Course with the given ID.
+		/// Returns warnings if data not valid or course ID is not found.
 		/// </summary>
 		[HttpPut("{id:int}")]
-		public void UpdateCourse(int id, [FromBody] Course course)
+		public IActionResult UpdateCourse(int id, [FromBody] Course course)
 		{
 			int index = _courses.FindIndex(c => c.ID == id);
-			if(index < 0) 
+			if(index < 0)
+			{
+				Context.Response.Headers["Warning"] = string.Format("No Course with id: {0}", id);
 				Context.Response.StatusCode = 400;
-				
-			_courses[index].Name = course.Name;
-			_courses[index].TemplateID = course.TemplateID;
-			_courses[index].StartDate = course.StartDate;
-			_courses[index].EndDate = course.EndDate;
+			}
 			
-			string url = Url.RouteUrl("GetCourseByID", new { id = course.ID }, 
-                    Request.Scheme, Request.Host.ToUriComponent());
-				
-			Context.Response.StatusCode = 303;
-			Context.Response.Headers["Location"] = url;
+			if(!ModelState.IsValid) {
+				Context.Response.Headers["Warning"] = "Course data not valid";
+				Context.Response.StatusCode = 400;
+			}
 			
+			// Update the Course data with the new data.
+			course.ID = id;
+			_courses[index] = course;	
+			
+			Context.Response.StatusCode = 200;
+			Context.Response.Headers["Location"] = Url.Link("GetCourseByID", new {id = course.ID});
+			return new ObjectResult(course);
 		}
 		
 		/// <summary>
-		/// 
+		/// Delete the Course with the given ID.
 		/// </summary>
 		[HttpDelete("{id:int}")]
 		public IActionResult RemoveCourse(int id)
